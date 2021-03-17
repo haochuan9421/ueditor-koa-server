@@ -1,0 +1,22 @@
+{
+  "name": "ueditor-koa-server",
+  "description": "UEditor 服务端（Koa2）",
+  "scripts": {
+    "dev": "nodemon src/main.js -w src",
+    "start": "node src/main.js"
+  },
+  "author": "郑昊川",
+  "license": "ISC",
+  "dependencies": {
+    "@koa/cors": "^3.1.0",
+    "fs-extra": "^9.1.0",
+    "koa": "^2.13.1",
+    "koa-body": "^4.2.0",
+    "koa-router": "^10.0.0",
+    "koa-static": "^5.0.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
