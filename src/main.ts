@@ -1,21 +1,21 @@
-const path = require("path");
-const fs = require("fs-extra");
-const Koa = require("koa");
-const Router = require("koa-router");
-const koaBody = require("koa-body");
-const static = require("koa-static");
-const cors = require("@koa/cors");
-const editorConfig = require("./config");
-const Uploader = require("./Uploader");
+import path from 'path';
+import { ensureDirSync } from 'fs-extra';
+import Koa from 'koa';
+import Router from 'koa-router';
+import koaBody from 'koa-body';
+import koaStatic from 'koa-static';
+import cors from '@koa/cors';
+import editorConfig from './config';
+import Uploader from './Uploader';
 
 const app = new Koa();
 const router = new Router();
-const staticRoot = path.join(__dirname, "../public");
+const staticRoot = path.join(__dirname, '../public');
 
-fs.ensureDirSync(staticRoot);
+ensureDirSync(staticRoot);
 
 router.all(
-  "/",
+  '/',
   // 允许通过 CORS 的方式跨域请求
   cors(),
   // 解析 request body
@@ -27,29 +27,24 @@ router.all(
       multiples: true, // 是否支持一次请求多个文件
     },
   }),
-  async (ctx) => {
+  async (ctx: Koa.Context) => {
     const { callback, action } = ctx.query;
-    let result = "";
-    if (callback) {
+    let result: Result | EditorConfig | string = '';
+    if (typeof callback === 'string') {
       if (/^[\w_]+$/.test(callback)) {
         result = `${callback}(${JSON.stringify(editorConfig)})`;
       } else {
-        result = { state: "callback参数不合法" };
+        result = { state: 'callback参数不合法' };
       }
     } else {
       switch (action) {
-        case "config":
+        case 'config':
           result = editorConfig;
           break;
         /* 上传图片 */
-        case "uploadimage":
+        case 'uploadimage':
           {
-            const {
-              imageFieldName,
-              imagePathFormat,
-              imageMaxSize,
-              imageAllowFiles,
-            } = editorConfig;
+            const { imageFieldName, imagePathFormat, imageMaxSize, imageAllowFiles } = editorConfig;
 
             const uploader = new Uploader(
               ctx,
@@ -60,20 +55,15 @@ router.all(
                 maxSize: imageMaxSize,
                 allowFiles: imageAllowFiles,
               },
-              "upload"
+              'upload'
             );
 
             result = await uploader.upload();
           }
           break;
         /* 上传涂鸦 */
-        case "uploadscrawl": {
-          const {
-            scrawlFieldName,
-            scrawlPathFormat,
-            scrawlMaxSize,
-            scrawlAllowFiles,
-          } = editorConfig;
+        case 'uploadscrawl': {
+          const { scrawlFieldName, scrawlPathFormat, scrawlMaxSize } = editorConfig;
 
           const uploader = new Uploader(
             ctx,
@@ -82,26 +72,25 @@ router.all(
             {
               pathFormat: scrawlPathFormat,
               maxSize: scrawlMaxSize,
-              allowFiles: scrawlAllowFiles,
-              oriName: "scrawl.png",
+              oriName: 'scrawl.png',
             },
-            "base64"
+            'base64'
           );
           result = await uploader.upload();
         }
         /* 上传视频 */
-        case "uploadvideo":
+        case 'uploadvideo':
         /* 上传文件 */
-        case "uploadfile":
+        case 'uploadfile':
         /* 列出图片 */
-        case "listimage":
+        case 'listimage':
         /* 列出文件 */
-        case "listfile":
+        case 'listfile':
         /* 抓取远程文件 */
-        case "catchimage":
+        case 'catchimage':
 
         default:
-          result = { state: "请求地址出错" };
+          result = { state: '请求地址出错' };
           break;
       }
     }
@@ -110,9 +99,9 @@ router.all(
   }
 );
 
-app.use(router.routes(), router.allowedMethods());
-app.use(static(staticRoot));
+app.use(router.routes()).use(router.allowedMethods());
+app.use(koaStatic(staticRoot));
 
-app.listen(3000, "0.0.0.0", () => {
-  console.log("启动成功，http://127.0.0.1:3000");
+app.listen(3000, '0.0.0.0', () => {
+  console.log('启动成功，http://127.0.0.1:3000');
 });
