@@ -57,6 +57,8 @@ interface Result {
   original?: string; // 原始文件名
   type?: string; // 文件类型
   size?: number; // 文件大小
+  source?: string; // 抓取远程图片的原始链接
+  list?: Result[];
 }
 
 interface UploaderConfig {
@@ -66,4 +68,4 @@ interface UploaderConfig {
   oriName?: string;
 }
 
-type uploadType = 'upload' | 'remote' | 'base64';
+type uploadType = "upload" | "remote" | "base64";
