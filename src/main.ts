@@ -1,5 +1,6 @@
 import path from "path";
 import { ensureDirSync } from "fs-extra";
+import { statSync } from "fs";
 import Koa from "koa";
 import Router from "koa-router";
 import koaBody from "koa-body";
@@ -7,6 +8,7 @@ import koaStatic from "koa-static";
 import koaQs from "koa-qs";
 import cors from "@koa/cors";
 import { get } from "lodash";
+import glob from "glob";
 import editorConfig from "./config";
 import Uploader, { stateMap } from "./Uploader";
 
@@ -42,12 +44,22 @@ router.all(
     const { callback, action } = ctx.query;
     let result: Result | EditorConfig | string = "";
 
+    const {
+      fileActionName,
+      imageActionName,
+      videoActionName,
+      scrawlActionName,
+      catcherActionName,
+      fileManagerActionName,
+      imageManagerActionName,
+    } = editorConfig;
+
     switch (action) {
       case "config":
         result = editorConfig;
         break;
       /* 上传图片 */
-      case "uploadimage":
+      case imageActionName:
         {
           const {
             imageFieldName,
@@ -72,7 +84,7 @@ router.all(
         }
         break;
       /* 上传涂鸦 */
-      case "uploadscrawl": {
+      case scrawlActionName: {
         const {
           scrawlFieldName,
           scrawlPathFormat,
@@ -94,7 +106,7 @@ router.all(
         break;
       }
       /* 上传视频 */
-      case "uploadvideo":
+      case videoActionName:
         {
           const {
             videoFieldName,
@@ -119,7 +131,7 @@ router.all(
         }
         break;
       /* 上传文件 */
-      case "uploadfile":
+      case fileActionName:
         {
           const {
             fileFieldName,
@@ -143,13 +155,59 @@ router.all(
         }
         break;
       /* 列出图片 */
-      case "listimage":
-        break;
+      case imageManagerActionName:
       /* 列出文件 */
-      case "listfile":
+      case fileManagerActionName:
+        {
+          const { listPath, allowFiles, listSize } = imageManagerActionName
+            ? {
+                listPath: editorConfig.imageManagerListPath,
+                allowFiles: editorConfig.imageManagerAllowFiles,
+                listSize: editorConfig.imageManagerListSize,
+              }
+            : {
+                listPath: editorConfig.fileManagerListPath,
+                allowFiles: editorConfig.fileManagerAllowFiles,
+                listSize: editorConfig.fileManagerListSize,
+              };
+
+          const fileRoot = path.join(staticRoot, listPath);
+          const files: string[] = await new Promise((resolve) => {
+            glob(
+              `**/*@(${allowFiles.join("|")})`,
+              {
+                cwd: fileRoot,
+              },
+              (error, files) => {
+                resolve(error ? [] : files);
+              }
+            );
+          });
+
+          const start = Number(ctx.query.start as any) || 0;
+          const size = Number(ctx.query.size as any) || listSize;
+
+          const list = files.slice(start, start + size).map((file) => {
+            const { mtime } = statSync(path.join(fileRoot, file));
+            const time = mtime.getTime().toString();
+            return {
+              mtime: Number(time.slice(0, time.length - 3)), // 时间戳不包含毫秒
+              url: path.join(listPath, file),
+            };
+          });
+
+          result = {
+            state: files.length
+              ? stateMap.SUCCESS
+              : stateMap.ERROR_FILE_NOT_FOUND,
+            list,
+            start,
+            total: files.length,
+          };
+        }
         break;
       /* 抓取远程文件 */
-      case "catchimage":
+      case catcherActionName:
         {
           const {
             catcherFieldName,

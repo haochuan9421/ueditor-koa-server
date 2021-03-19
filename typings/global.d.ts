@@ -58,7 +58,9 @@ interface Result {
   type?: string; // 文件类型
   size?: number; // 文件大小
   source?: string; // 抓取远程图片的原始链接
-  list?: Result[];
+  list?: Result[] | { mtime: number; url: string }[];
+  start?: number;
+  total?: number;
 }
 
 interface UploaderConfig {
