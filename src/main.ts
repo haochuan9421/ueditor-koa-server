@@ -6,11 +6,16 @@ import koaBody from "koa-body";
 import koaStatic from "koa-static";
 import koaQs from "koa-qs";
 import cors from "@koa/cors";
+
 import adapter from "./adapter";
-import controller from "./controller";
-import DiskUploader from "./disk/Uploader";
-import DiskListManager from "./disk/ListManager";
-import diskEditorConfig from "./disk/config";
+import diskEditorConfig from "./adapter/disk/config";
+import DiskUploader from "./adapter/disk/Uploader";
+import DiskListManager from "./adapter/disk/ListManager";
+import cosEditorConfig from "./adapter/cos/config";
+import CosUploader from "./adapter/cos/Uploader";
+import CosListManager from "./adapter/cos/ListManager";
+
+import ueditorController from "./ueditor-controller";
 
 const app = new Koa();
 const router = new Router();
@@ -40,14 +45,22 @@ router.use(
   })
 );
 
+// 上传到本地磁盘
 router.all(
-  "/",
+  "/disk",
   async (ctx: Koa.Context, next: Koa.Next) => {
     ctx.staticRoot = staticRoot;
     await next();
   },
   adapter(diskEditorConfig, DiskUploader, DiskListManager),
-  controller
+  ueditorController
+);
+
+// 上传到腾讯云对象存储
+router.all(
+  "/cos",
+  adapter(cosEditorConfig, CosUploader, CosListManager),
+  ueditorController
 );
 
 app.use(router.routes()).use(router.allowedMethods());

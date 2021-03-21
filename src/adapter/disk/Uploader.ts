@@ -6,7 +6,7 @@ import axios from "axios";
 import Koa from "koa";
 import { File } from "formidable";
 import { single } from "validate.js";
-import stateMap from "../state-map";
+import stateMap from "../../const/state-map";
 
 const DiskUploader: UploaderConstructor = class DiskUploader implements IUploader {
   /**

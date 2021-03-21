@@ -2,7 +2,7 @@ import path from "path";
 import Koa from "koa";
 import glob from "glob";
 import { statSync } from "fs";
-import stateMap from "../state-map";
+import stateMap from "../../const/state-map";
 
 const DiskListManager: ListManagerConstrctor = class DiskListManager
   implements IListManager {

@@ -1,6 +1,6 @@
 import Koa from "koa";
 import { get } from "lodash";
-import stateMap from "./state-map";
+import stateMap from "./const/state-map";
 
 export default async (ctx: Koa.Context) => {
   let result: Result | EditorConfig | string = "";
